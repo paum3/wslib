@@ -1,0 +1,121 @@
+TITLE:: KeyboardWindow
+summary:: a keyboard window.
+categories:: wslib quark
+
+
+
+CLASSMETHODS::
+
+METHOD:: new
+creates a new instance.
+
+code::
+k = KeyboardWindow();
+::
+
+The vertical clicking position equals velocity, which is visualized by the color of the key (amount of red).
+
+If the mouse is moved out of the key's area while pressed, the note will hold until clicked again.
+
+ARGUMENT:: nkeys
+number of piano keys, default 36 (three octaves)
+ARGUMENT::startOctave
+number of lowest octave, default  1
+ARGUMENT:: channel
+channel number, default 0
+ARGUMENT::bounds
+window bounds, default 600 x 100
+
+
+METHOD:: allWindows
+returns::An Array of all instances of KeyboardWindow class.
+METHOD:: scale
+METHOD:: pressNote
+ARGUMENT:: noteNumber
+ARGUMENT:: velo
+ARGUMENT:: channel
+METHOD:: initClass
+METHOD:: unPressNote
+ARGUMENT:: noteNumber
+ARGUMENT:: velo
+ARGUMENT:: channel
+METHOD:: blackKeysStructure
+METHOD:: unPressAll
+ARGUMENT:: velo
+ARGUMENT:: channel
+
+
+INSTANCEMETHODS::
+METHOD:: activeNotes
+array with currently active notes. Last item is always the last note press
+
+code::
+10.do({ k.pressNote( 36 + 36.rand, 64.rand + 1 ) }); // 10 random notes
+k.activeNotes;
+k.unPressAll;
+::
+
+METHOD:: downAction, upAction
+these variables contain Functions to be executed when a key is pressed or released.
+The default downAction posts an array containing the received arguments:
+
+channel ( as defined during creation), midi note number, midi velocity (0-127)
+
+code::
+
+(
+
+// a simple keyboard implementation using Groups for every possible note
+s = Server.default;
+36.do({ |i| s.sendMsg( \g_new, 500 + 36 + i ); }); // run this line again after cmd-.
+
+k.downAction = { |chan, note, velo| s.sendMsg( \s_new, "default", s.nextNodeID, 1, 500 + note,
+			\freq, note.midicps,  \amp, (velo/127) * 0.25 );
+	 };
+
+k.upAction = { |chan, note, velo|
+
+	// release velo changes release time (0-1s)
+	s.sendMsg( \n_set,  500 + note, "gate", -1 - (velo / 127.0) )
+
+	};
+
+)
+::
+
+METHOD:: unPressAll
+press and unpress all notes from the lang
+code::
+10.do({ k.pressNote( 36 + 36.rand, 64.rand + 1 ) }); // 10 random notes
+k.activeNotes;
+k.unPressAll;
+::
+
+
+
+
+METHOD:: upAction
+METHOD:: startOctave
+METHOD:: notesDict
+METHOD:: activeKeys
+METHOD:: bounds
+METHOD:: nKeys
+METHOD:: channel
+METHOD:: unPressNote
+METHOD:: newWindow
+METHOD:: hold
+METHOD:: lastVelo
+METHOD:: userView
+
+
+ARGUMENT:: velo
+(describe argument here)
+
+
+section::Undocumented methods
+
+METHOD::pressNote
+METHOD::unPressKey
+METHOD::storeArgs
+METHOD::pressKey
+METHOD::window
