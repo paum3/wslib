@@ -1,0 +1,538 @@
+
+TITLE:: SmoothSlider
+summary:: a Pen-based replacement for SCSlider, with extra styling options.
+categories:: wslib
+
+DESCRIPTION::
+SmoothSlider works the same way as SCSlider.  But, as the name states, it is smooth. I created this because, frankly, I don't like the looks of SCSlider. Next to that it has a lot of extra options. SmoothSlider is inspired and partly based upon blackrains link::Classes\Knob::.  SmoothSlider was designed to use alongside link::SmoothButton:: and link::SmoothNumberBox::.
+
+
+Also see: link::Classes/RoundSlider::, link::Classes/EZSmoothSlider::
+
+code::
+
+(
+
+w = Window( "SmoothSlider", Rect( 300,150,220,220) ).front;
+b = SmoothSlider( w,  Rect( 90,30,40,160) ).value_(0.75)
+	.action_({ |sl| [sl.value, thisThread.seconds].postln; });
+
+)
+::
+
+NOTE::One of the advantages of SmoothSlider above SCSlider is that it doesn't need a deferred function to get or set its value when called from a SystemClock thread or OSC/MIDI responder. And when the action is called (via valueAction or doAction) it is done immediately instead of with the AppClock delay.::
+
+
+code::
+(
+
+t = Task({
+
+	var pt;
+
+	pt = PintC( Pseq( [b.value, Pwhite(0.0,1.0,inf)], 1 ), 1/Pseries(2, 0.25,inf) ).asStream;
+
+	b.doAction;
+
+ 	100.do({ |i|
+
+ 		b.value = pt.next;
+
+ 		b.background = Color.red.alpha_(0.5).blend( Color.black.alpha_(0.25), i/99 );
+
+ 		0.05.wait });
+
+	b.doAction; // thisThread.seconds should differ exactly 5s from the first post
+
+	}).start;
+
+)
+::
+
+
+CLASSMETHODS::
+
+METHOD:: viewClass
+
+SmoothSlider listens to all messages as SCSlider does, but has a few extra of its own:
+
+INSTANCEMETHODS::
+
+METHOD:: mode
+Mode indicates the way a SmoothSlider reacts to the mouse. The mode can be 'jump' or 'move'
+
+
+	'jump' :  (default) behaves as SCSlider; the value jumps to where the mouse hits
+
+	'move' :  the value only changes by the amount the mouse is moved after clicking, and doesn't
+
+			jump to the mouse position.
+code::
+
+b.mode_( \move ); // try moving the slider before and after running this line
+b.mode_( \jump ); // back to default
+::
+
+METHOD:: knobColor, background, hilightColor
+Colors, Gradients and SCImages can be used with these getter/setters.
+
+ARGUMENT:: newColor
+
+code::
+
+( // random colors
+
+w = Window( "colorful", Rect(200,200, 250, 120 ) ).front.decorate;
+7.do({ |i| SmoothSlider( w, 30@100 )
+		.knobColor_( Color.rand(0,0.8).alpha_( [1,0.5,1,1,0,1,0][i] ) )
+		.background_( Color.rand(0,0.8).alpha_( [1,0.5,0,1,1,0,0][i] ) )
+		.hilightColor_( Color.rand(0,0.8).alpha_( [1,0.5,1,0,1,0,1][i] ) )
+		.value_( i.linlin( 0,6,0.2,0.8) )
+		});
+)
+
+
+
+( // random gradients
+x = { Color.rand(0,0.8).alpha_( [1.0.rand ** 2, 1].choose ) };
+w = Window( "gradients", Rect(200,200, 250, 120 ) ).front.decorate;
+7.do({ |i| SmoothSlider( w, 30@100 )
+		.knobColor_( Gradient( x.(), x.(), [\h, \v].choose ) )
+		.background_( Gradient( x.(), x.(), [\h, \v].choose ) )
+		.hilightColor_( Gradient( x.(), x.(), [\h, \v].choose ) )
+		.value_( i.linlin( 0,6,0.2,0.8) )
+	});
+)
+
+
+
+( // random pictures :: OSX only
+// downloads a selection of (free) patterns from the web
+// ... might take a while ...
+p = [ 1, 16, 18, 30, 35, 67, 72, 77, 118, 119, 120, 124, 125, 126, 128, 134, 135, 136, 141,
+		150, 155, 156, 157, 160, 161, 172, 173, 184, 185, 190, 195, 196 ].scramble[..20];
+p = p.collect({ |nr| "http://static1.grsites.com/archive/textures/blue/blue%.jpg"
+
+	.format( nr.asStringToBase(10,3) ); });
+	w = Window( "pictures", Rect(200,200, 316, 210 ) ).front.decorate;
+7.do({ |i|
+	i = i*3;
+	SmoothSlider( w, 40@200 )
+		.knobColor_( SCImage( p[i] ) )
+		.background_( SCImage( p[i+1] ) )
+		.hilightColor_( SCImage( p[i+2] ) )
+		.value_( i.linlin( 0,18,0.2,0.8) )
+		.borderColor_(Color.clear)
+	});
+
+)
+
+
+
+(
+
+w = Window( "smoother smoothslider", Rect(200,200, 250, 120 ) ).front.decorate;
+z = SmoothSlider( w, 160@15 ).value_( 0.5 )
+	.knobColor_(  Gradient( Color.gray(0.9), Color.gray(0.1), \h ) )
+	.background_( Gradient( Color.black.alpha_(0.8), Color.white.alpha_(0.8), \h ) )
+	.hiliteColor_( Gradient( Color.blue.alpha_(0.5), Color.web.purple.alpha_(0.25), \v ) )
+	.knobSize_(1).canFocus_(true);
+)
+
+::
+
+
+
+METHOD:: knobSize
+knobSize is relative to the width of the slider. It defaults to 0.25.
+
+The rounded edges of SmoothSlider are influenced by the knobSize.
+ARGUMENT:: newSize
+
+code::
+(
+w = Window( "knobSize", Rect(100,100, 120, 250 ) ).front.decorate;
+c = SmoothSlider( w, 50@200 ).value_(1).knobSize_( 1 );
+d = SmoothSlider( w, 50@200 ).value_(1).knobSize_( 1 );
+c.action_({ |sl| d.knobSize = sl.value; }); // moving the slider changes the knobSize of the other
+d.action_({ |sl| c.knobSize = sl.value; });
+)
+
+::
+
+
+
+METHOD:: baseWidth
+baseWidth is relative to the width of the sliders base. It defaults to 1.
+
+code::
+
+(
+w = Window( "basewidths", Rect(200,200, 250, 120 ) ).front.decorate;
+7.do({ |i| SmoothSlider( w, 30@100 ).baseWidth_( 1/(i+1) ).value_( i/7 ); });
+)
+
+
+
+(
+w = Window( "cocoa-like slider", Rect(200,200, 200, 120 ) ).front.decorate;
+z = SmoothSlider( w, 160@15 ).baseWidth_( 0.3 ).value_( 0.5 )
+	.knobColor_(  Gradient( Color.gray(0.8), Color.gray(0.2), \h ) )
+	.background_( Gradient( Color.black.alpha_(0.8), Color.white.alpha_(0.8), \h ) )
+
+	.knobSize_(1).hilightColor_(nil).canFocus_(false);
+
+)
+
+::
+ARGUMENT:: newBaseWidth
+
+
+METHOD:: border, borderColor
+border is the size of the outline border around the slider. It defaults to 0 (no border).
+
+borderColor defines the color of the border
+
+code::
+
+(
+w = Window( "borders", Rect(200,200, 250, 120 ) ).front.decorate;
+7.do({ |i| SmoothSlider( w, 30@100 ).border_( i )
+	.borderColor_( Color.rand )
+	.value_( i/7 ); });
+)
+
+
+(
+w = Window( "levelmeters", Rect(200,200, 250, 120 ) ).front.decorate;
+7.do({ |i|
+	SmoothSlider( w, 30@100 ).border_( 1 ).borderColor_( Color.gray(0.2) )
+		.value_( (i+1)/7 ).knobSize_(0).canFocus_(false)
+		.background_( Color.white.alpha_(0.25) )
+		.hiliteColor_( Gradient( Color.red.alpha_(0.9), Color.green.alpha_(0.8), \v ) );
+	});
+)
+::
+
+
+ARGUMENT:: newColor
+
+
+METHOD:: extrude
+extrude can make a SmoothSlider look more like regular SCSliders by adding a bevel around the base and the knob. It needs to be used in combination with border; if border == it will not show.
+
+code::
+
+(
+w = Window( "SmoothSlider", Rect( 300,150,220,220) ).front;
+b = SmoothSlider( w,  Rect( 90,30,40,160) ).value_(0.75)
+	.border_(1).extrude_(true);
+)
+
+
+(
+w = Window( "which is which?", Rect( 300,150,220,220) ).front;
+b = SmoothSlider( w,  Rect( 30,30,160,40) ).value_(0.8)
+	.border_(1).extrude_(true)
+	.borderColor_( Color.clear ).knobColor_( Color.clear )
+	.background_( Color.clear ).hiliteColor_( Color.clear )
+	.knobSize_(0).thumbSize_(12);
+c = Slider( w,  Rect( 30,90,160,40) ).value_(0.8)
+
+)
+
+::
+ARGUMENT:: bool
+
+
+METHOD:: relThumbSize
+
+the relThumbSize is a little different from the knobSize. It changes the thumbSize variable (inherited from SCSlider) but relative to the slider's length. The default thumbSize is 0. You will only see a change if the thumbSize becomes greater then the absolute knob size (absKnobSize - getter only).
+
+code::
+
+(
+
+w = Window( "relThumbSize", Rect(100,100, 220, 120 ) ).front.decorate;
+c = SmoothSlider( w, 200@50 );
+d = SmoothSlider( w, 200@50 );
+c.action_({ |sl| d.relThumbSize = sl.value; });
+d.action_({ |sl| c.relThumbSize = sl.value; });
+
+)
+::
+ARGUMENT:: newSize
+
+
+METHOD:: string, font, align, stringColor, stringOrientation
+
+SmoothSliders can also have a label displayed on top. The label can be set using the string_ method. By default the label is always shown horizontally, regardless of the orientation of the slider. The font, align, stringColor and stringOrientation methods can be used to customize the label further.
+
+
+
+code::
+// example 1: orientation and styling
+
+(
+
+w = Window( "string", Rect(100,100, 216, 180 ) ).front;
+w.addFlowLayout;
+c = SmoothSlider( w, 50@150 );
+d = SmoothSlider( w, 150@50 );
+c.string = "String 1";
+d.string = "String 2";
+
+)
+
+
+
+( // change color
+c.stringColor = Color.white;
+d.stringColor = Color.white;
+
+)
+
+
+
+( // change font
+c.font = Font( "Times-Bold", 12 );
+d.font = Font( "Times-Bold", 12 );
+)
+
+
+
+// change orientation (\v, \h, \up, \down or an angle)
+
+c.stringOrientation = \v;
+c.stringOrientation = \h;
+c.stringOrientation = \up;
+c.stringOrientation = 0.3pi;
+c.stringOrientation = pi; // upside down
+
+
+
+// change alignment
+
+d.align = \left;
+d.align = \right;
+d.align = \center;
+
+
+
+////
+
+//// example 2: dynamic string
+
+(
+
+w = Window( "SmoothSlider", Rect( 300,150,220,220) ).front;
+b = SmoothSlider( w,  Rect( 30,30,160,40) ).value_(0.75)
+	.action_({ |sl| sl.string = "value: %".format(sl.value.round(0.001) ); });
+b.stringColor = Color.white;
+b.doAction;
+
+)
+::
+
+ARGUMENT:: newOrientation
+
+
+
+METHOD:: stringAlignToKnob
+Makes the text align to the position of the knob
+
+
+code::
+(
+
+w = Window( "SmoothSlider", Rect( 300,150,220,220) ).front;
+b = SmoothSlider( w,  Rect( 90,30,40,160) ).value_(0.75)
+	.action_({ |sl| sl.string = sl.value.round(0.01 ).asString; });
+b.stringColor = Color.white;
+b.thumbSize = 16;
+b.stringAlignToKnob = true;
+b.doAction;
+
+)
+::
+ARGUMENT:: bool
+
+
+METHOD:: absKnobSize
+
+
+
+METHOD:: knobBorderScale
+
+ARGUMENT:: value
+
+
+METHOD:: focusColor
+
+ARGUMENT:: newColor
+
+
+METHOD:: sliderBounds
+
+
+METHOD:: alt_scale
+
+
+METHOD:: thumbSize
+
+ARGUMENT:: newSize
+
+
+METHOD:: shift_scale
+
+
+METHOD:: keyDown
+
+ARGUMENT:: char
+
+ARGUMENT:: modifiers
+
+ARGUMENT:: unicode
+
+ARGUMENT:: keycode
+
+ARGUMENT:: key
+
+
+
+METHOD:: mouseMove
+
+ARGUMENT:: x
+
+ARGUMENT:: y
+
+ARGUMENT:: modifiers
+
+
+METHOD:: deltaAction
+
+
+METHOD:: init
+
+ARGUMENT:: parent
+
+ARGUMENT:: bounds
+
+
+METHOD:: orientation
+
+ARGUMENT:: newOrientation
+
+
+METHOD:: getScale
+
+ARGUMENT:: modifiers
+
+
+METHOD:: pixelStep
+
+
+METHOD:: step
+
+
+METHOD:: draw
+
+
+METHOD:: centerPos
+
+ARGUMENT:: value
+
+
+METHOD:: increment
+
+ARGUMENT:: zoom
+
+
+METHOD:: defaultReceiveDrag
+
+
+METHOD:: refresh
+
+
+METHOD:: defaultGetDrag
+
+
+METHOD:: clipMode
+
+
+METHOD:: ctrl_scale
+
+
+METHOD:: grid
+
+
+METHOD:: mouseDown
+
+ARGUMENT:: x
+
+ARGUMENT:: y
+
+ARGUMENT:: modifiers
+
+ARGUMENT:: buttonNumber
+
+ARGUMENT:: clickCount
+
+
+METHOD:: outOfBoundsAction
+
+
+
+
+METHOD:: defaultCanReceiveDrag
+
+
+
+METHOD:: decrement
+
+ARGUMENT:: zoom
+
+
+METHOD:: delta
+
+ARGUMENT:: val
+
+
+METHOD:: color
+
+
+METHOD:: allwaysPerformAction
+
+
+METHOD:: valueAction
+
+ARGUMENT:: val
+
+
+METHOD:: value
+
+ARGUMENT:: val
+
+
+METHOD:: clipValue
+
+ARGUMENT:: active
+
+
+METHOD:: centered
+
+ARGUMENT:: bool
+
+
+
+METHOD:: hiliteColor
+
+ARGUMENT:: newColor
+
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::

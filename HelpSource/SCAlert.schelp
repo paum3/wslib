@@ -1,0 +1,175 @@
+TITLE:: SCAlert
+summary:: An alert window class
+categories:: wslib
+
+DESCRIPTION::
+(put long description here)
+
+
+CLASSMETHODS::
+METHOD:: new
+
+
+ARGUMENT:: string
+ a string containing the message to be displayed. You can use $\n characters in it as well
+
+ARGUMENT:: buttons
+ an Array containing the names of the buttons. It can also contain SCButton states. buttons defaults to [ "cancel", "ok" ]
+
+ARGUMENT:: actions
+an Array containing a function for each button
+ARGUMENT:: color
+the color of the border stripe around the window and the icon. Defaults to Color.red.alpha_(0.75)
+ARGUMENT:: background
+the background color of the window. Defaults to white
+ARGUMENT:: iconName
+he name of the icon to be displayed from DrawIcon. Defaults to 'warning'
+ARGUMENT:: border
+Should the window have a border? Defaults to true
+
+
+SCAlert also listens to key strokes. If you type a letter it will find the button of which the name starts with that letter and hit it (just like in most alert windows).
+
+code::
+
+
+(
+
+SCAlert( "What do you want to hear now?\n
+
+type 'n' for nothing, 's' for a sine wave
+
+and 'p' for a pulse",
+
+	[ "nothing", ["sine wave", Color.red(0.2)], "pulse" ],  // buttons
+
+	[ 	nil,
+
+		{ { Env.sine(0.25, 0.25).kr(2) * SinOsc.ar(440) }.play;  },
+
+		{ { Env.sine(0.25, 0.25).kr(2) * Pulse.ar(440) }.play;  } ], // actions
+
+	Color.blue(0.2),
+
+	iconName: 'sign_$?' );
+
+);
+
+::
+
+
+METHOD:: modal
+if true (default) runs all SCAlerts in modal mode (see SCModalWindow)
+
+
+
+
+INSTANCEMETHODS::
+
+METHOD:: background
+
+ARGUMENT:: aColor
+
+
+METHOD:: iconName
+
+ARGUMENT:: newIconName
+
+
+METHOD:: buttonLabel
+changes the name of the button at index
+ARGUMENT:: index
+ARGUMENT:: newLabel
+
+
+METHOD:: enable
+
+ARGUMENT:: index
+
+
+METHOD:: hit
+hits the currently focused button
+ARGUMENT:: index
+
+
+METHOD:: buttonViews
+
+
+METHOD:: disable
+
+ARGUMENT:: index
+
+
+METHOD:: openAgain
+
+
+METHOD:: focus
+sets the focus to the button at index
+ARGUMENT:: index
+
+
+METHOD:: buttonClosesWindow
+the index of the button action which is eveluated when the SCAlert window is closed using it's close box.
+
+Defaults to -1, which means that none of the actions is used.
+
+code::
+
+
+(
+
+a = SCAlert( "hello!" );
+a.color = Color.green(0.2);
+b = Task({
+	var i = 0;
+	loop {
+		{ a.iconName = ("wait_" ++ (i = i+(1/16))).asSymbol; }.defer;
+	  	0.1.wait;
+	  	};
+	}).start;
+a.actions = [ { b.stop }, { b.stop } ];
+a.onCloseIndex = 0;
+
+)
+::
+
+METHOD:: color
+
+ARGUMENT:: newColor
+
+
+METHOD:: string
+
+ARGUMENT:: newString
+
+
+METHOD:: actions
+
+
+METHOD:: buttons
+
+
+METHOD:: window
+The SCWindow itself
+
+METHOD:: isEnabled
+
+ARGUMENT:: index
+
+
+METHOD:: init
+
+ARGUMENT:: background
+
+ARGUMENT:: border
+
+
+METHOD:: onCloseIndex
+
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::

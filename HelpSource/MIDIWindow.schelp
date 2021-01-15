@@ -1,0 +1,80 @@
+
+TITLE:: MIDIWindow
+summary:: a graphic interface for the MIDIClient class.
+categories:: wslib
+
+DESCRIPTION::
+MIDIWindow works as a global class; there will never be more then one MIDIWindow. It should show up next to the Server windows. Creating a MIDIWindow also calls MIDIClient.init. The popup menu shows a list of available midi devices. If you select one and click connect it will connect to port 0. If you add a MIDI device to your computer you should press the restart button. This will close the window and open a fresh one with an updated list of devices.
+
+
+
+The first argument of MIDIWindow( ) is connect. This can be a boolean or an array of booleans. If it is one boolean MIDIWindow will connect all available devices to port 0. An array connects if true per device.
+
+
+code::
+
+MIDIWindow( true );  // connects all available devices to port 0
+
+::
+
+
+MIDIWindow is used by:
+
+
+
+MIDIBendWindow
+
+MIDITouchWindow
+
+MIDIControlWindow
+
+MIDICinetixWindow
+
+
+CLASSMETHODS::
+
+METHOD:: toPort
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: sourceNames
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: new
+(describe method here)
+
+ARGUMENT:: connect
+(describe argument here)
+
+ARGUMENT:: current
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: inIsOn
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: window
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: currentDevice
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+
+INSTANCEMETHODS::
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::
